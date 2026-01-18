@@ -1,0 +1,9 @@
+dearpygui
+dearpygui
+psutil
+GPUtil
+numpy<2.0
+Pillow
+opencv-python
+rembg
+docx2pdf
