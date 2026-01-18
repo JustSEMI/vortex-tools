@@ -4,16 +4,6 @@
 
 ---
 
-## 📋 Daftar Isi
-- [Fitur Utama](#fitur-utama)
-- [Persyaratan Sistem](#persyaratan-sistem)
-- [Instalasi](#instalasi)
-- [Penggunaan](#penggunaan)
-- [Struktur Proyek](#struktur-proyek)
-- [Teknologi](#teknologi)
-
----
-
 ## ✨ Fitur Utama
 
 ### 1. **IMAGE TOOLS**
@@ -39,20 +29,6 @@
 ### 2. **DOCUMENT TOOLS**
 - Fitur dokumen sedang dalam pengembangan (coming soon)
 - Rencananya akan mendukung file: `.docx`, `.pdf`
-
----
-
-## 🖥️ Persyaratan Sistem
-
-### Hardware
-- **GPU yang mendukung Vulkan** (untuk akselerasi GPU)
-- **RAM**: Minimal 4GB (direkomendasikan 8GB ke atas)
-- **Storage**: Minimal 2GB ruang bebas
-
-### Software
-- **OS**: Windows 7 atau lebih baru
-- **Python**: 3.8 atau lebih tinggi
-- **Dependencies**: Lihat file `requirements.txt`
 
 ---
 
