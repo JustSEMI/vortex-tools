@@ -166,7 +166,11 @@ def main():
                     log_message("Memulai konversi dokumen...")
                     state["is_processing"] = True
                     state["progress"] = 0.0
-                    threading.Thread(target=lambda: log_message(docxtool.convert_document(state["selected_doc"], state)), daemon=True).start()
+                    target = "DOCX" if state["selected_doc"].lower().endswith(".pdf") else "PDF"
+                    threading.Thread(
+                        target=lambda: log_message(docxtool.convert_doc(state["selected_doc"], target, state)),
+                        daemon=True
+                    ).start()
                 imgui.end_tab_item()
             imgui.end_tab_bar()
 

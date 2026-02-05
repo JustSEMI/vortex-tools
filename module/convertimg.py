@@ -1,7 +1,7 @@
 import os
 from PIL import Image
 
-def convert_image(input_path, target_format):
+def convert_image(input_path, target_format, state_ref):
     try:
         target_format = target_format.upper()
         pil_format = "JPEG" if target_format == "JPG" else target_format
