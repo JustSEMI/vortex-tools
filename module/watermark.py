@@ -11,7 +11,7 @@ def apply_watermark_grid(input_path, wm_text="Copyright Vortex", opacity=90):
         draw = ImageDraw.Draw(txt_layer)
         
         try:
-            font = ImageFont.truetype("arial.ttf", 18)
+            font = ImageFont.truetype("arial.ttf", 42)
         except:
             font = ImageFont.load_default()
 
