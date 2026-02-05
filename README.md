@@ -1,6 +1,6 @@
 # Vortex Tools - Multi Utility Local
 
-**Sebuah aplikasi Local Multi-Tools yang dirancang untuk memudahkan pengguna dalam mengelola dan memproses gambar serta dokumen dengan antarmuka grafis yang intuitif.**
+**Sebuah aplikasi Local Multi-Tools berbasis GUI yang dirancang untuk memudahkan pengguna dalam memproses gambar dan dokumen dengan antarmuka yang intuitif dan modern.**
 
 ---
 
@@ -10,25 +10,40 @@
 
 #### AI Enhancement
 - **Background Remover**
-  - Menghapus background gambar secara otomatis menggunakan model u2net
-  - Didukung oleh GPU (Vulkan Mode) untuk performa optimal
-  - Input: Gambar (JPG, PNG, WEBP)
-  - Output: Gambar tanpa background
+  - Menghapus background gambar secara otomatis menggunakan AI model u2net
+  - Didukung oleh GPU dengan akselerasi Vulkan
+  - Support format: JPG, PNG, WEBP, BMP
+  - Output: Gambar dengan background transparan
 
 - **Image Upscaler**
-  - Meningkatkan resolusi gambar hingga 4x lipat
-  - Menggunakan model EDSR dengan akselerasi GPU
-  - Opsi: 2x atau 4x upscaling
+  - Meningkatkan resolusi gambar hingga 4x lipat menggunakan model EDSR
+  - Akselerasi GPU melalui NCNN-Vulkan
+  - Pilihan scale: 2x atau 4x
   - Ideal untuk meningkatkan kualitas gambar beresolusi rendah
+  - Menggunakan executable RealESRGAN-ncnn-vulkan
 
 #### Format Converter
-- Konversi gambar ke berbagai format
+- Konversi gambar ke berbagai format populer
 - Format yang didukung: **JPG**, **PNG**, **WEBP**, **BMP**
-- Proses konversi yang cepat dan efisien
+- Proses konversi cepat dengan preservasi kualitas tinggi
+- UI sederhana dengan dropdown pilihan format
+
+#### Batch Watermark
+- Menambahkan watermark teks ke multiple gambar sekaligus
+- Pattern grid dengan rotasi 35° untuk perlindungan maksimal
+- Text outline untuk kontras tinggi pada berbagai background
+- Opacity adjustable (default: 90)
+- Hasil tersimpan di folder `vortex_watermarked`
+- Progress bar real-time untuk batch processing
 
 ### 2. **DOCUMENT TOOLS**
-- Fitur dokumen sedang dalam pengembangan (coming soon)
-- Rencananya akan mendukung file: `.docx`, `.pdf`
+- **PDF to DOCX Converter**
+  - Konversi file PDF ke format Microsoft Word (.docx)
+  - Preservasi layout dan formatting
+  
+- **DOCX to PDF Converter**
+  - Konversi file Word (.docx) ke format PDF
+  - Menggunakan pywin32 untuk konversi native Windows
 
 ---
 
@@ -39,12 +54,10 @@
 git clone https://github.com/JustSEMI/vortex-tools.git
 cd vortex-tools
 ```
-
-### 2. Instalasi Dependencies
+### 2. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
-
 ### 3. Jalankan Aplikasi
 ```bash
 python main.py
@@ -52,92 +65,41 @@ python main.py
 
 ---
 
-## 🚀 Penggunaan
-
-### Menggunakan Background Remover
-1. Buka aplikasi **Vortex Multi-Tools**
-2. Masuk ke tab **IMAGE TOOLS**
-3. Klik **SELECT IMAGE** dan pilih gambar Anda
-4. Pergi ke tab **AI Enhancement**
-5. Klik tombol **REMOVE BG**
-6. Tunggu proses selesai (hasil akan ditampilkan di log)
-
-### Menggunakan Image Upscaler
-1. Pilih gambar yang ingin di-upscale
-2. Di tab **AI Enhancement**, pilih faktor upscaling (2x atau 4x)
-3. Klik **UPSCALE (EDSR)**
-4. Tunggu proses selesai
-
-### Menggunakan Format Converter
-1. Pilih gambar yang ingin dikonversi
-2. Masuk ke tab **Format Converter**
-3. Pilih format target (JPG, PNG, WEBP, atau BMP)
-4. Klik **START CONVERT**
-5. File hasil konversi akan disimpan di lokasi yang sama
-
----
-
 ## 📁 Struktur Proyek
-
-```
+```bash
 vortex-tools/
-├── main.py                 # File utama aplikasi (UI & logic)
+├── main.py                 # File utama aplikasi (GUI & orchestration)
 ├── README.md              # Dokumentasi proyek
 ├── requirements.txt       # Dependencies Python
 ├── module/
 │   ├── __init__.py        # Module initialization
-│   ├── removebg.py        # Module Background Remover
-│   ├── upscaler.py        # Module Image Upscaler
-│   ├── convertimg.py      # Module Format Converter
-│   └── __pycache__/       # Cache Python
-└── model/                 # Model AI dan weights
-    └── (model files)
+│   ├── removebg.py        # Background Remover (rembg + u2net)
+│   ├── upscaler.py        # Image Upscaler (EDSR via NCNN)
+│   ├── convertimg.py      # Format Converter (PIL)
+│   ├── docxtool.py        # Document Converter (PDF ↔ DOCX)
+│   ├── watermark.py       # Batch Watermark Tool
+│   └── __pycache__/       # Python cache
+└── model/                 # AI Model executables & dependencies
+    ├── realesrgan-ncnn-vulkan.exe
+    ├── vcomp140.dll
+    └── vcomp140d.dll
 ```
 
 ---
 
-## 🛠️ Teknologi
+## 🐛 Known Issues & Troubleshooting
+- **Masalah Font Watermark**: Jika watermark tidak muncul dengan benar, pastikan font `arial.ttf` tersedia di sistem Anda. Alternatifnya, Anda dapat mengganti font di `module/watermark.py`.
+- **Konversi Dokumen Gagal**: Pastikan Microsoft Word terinstal pada sistem Anda untuk fitur konversi DOCX ke PDF dan sebaliknya.
+- **Masalah GPU Acceleration**: Pastikan driver GPU Anda sudah diperbarui dan mendukung Vulkan untuk performa optimal pada fitur AI Enhancement.
+- **Error Missing DLL**: Jika mengalami error terkait DLL saat menjalankan upscaler, pastikan file `vcomp140.dll` dan `vcomp140d.dll` ada di folder `model/`.
+- **Performance Issues**: Untuk performa terbaik, jalankan aplikasi pada sistem dengan spesifikasi memadai, terutama untuk fitur AI yang memanfaatkan GPU.
+- **Logging & Debugging**: Periksa log history di bagian bawah aplikasi untuk informasi lebih lanjut tentang proses yang dijalankan dan potensi error.
 
-### Libraries Utama
-- **DearPyGui** - Framework GUI untuk antarmuka grafis
-- **Python 3.x** - Bahasa pemrograman utama
-- **GPU Acceleration** - Vulkan Mode untuk performa maksimal
-
-### Model AI
-- **u2net** - Untuk Background Removal
-- **EDSR** - Untuk Image Upscaling
-
-### Processing
-- **Threading** - Untuk proses non-blocking
-- **Subprocess** - Untuk pengambilan hardware info
-- **GPU Support** - Akselerasi melalui Vulkan
-
----
-
-## 📝 Catatan
-
-- Pastikan GPU Anda mendukung Vulkan untuk performa optimal
-- Semua proses berjalan secara asynchronous (tidak membuat UI hang)
-- Log konsol menampilkan status setiap operasi
-- Hasil output disimpan di folder yang sama dengan file input
-
----
+## 🤝 Kontribusi
+Kontribusi sangat diterima! Silakan fork repository ini dan buat pull request dengan fitur baru, perbaikan bug, atau peningkatan dokumentasi.
 
 ## 📄 Lisensi
+Proyek ini dilisensikan di bawah MIT License. Lihat file `LICENSE` untuk detail lebih lanjut.
 
-Proyek ini adalah open-source dan dapat digunakan secara bebas.
-
----
-
-## 👤 Kontribusi
-
-Untuk berkontribusi, silakan:
-1. Fork repository ini
-2. Buat branch fitur baru
-3. Commit perubahan Anda
-4. Push ke branch
-5. Buat Pull Request
-
----
-
-**Dikembangkan oleh JustSEMI** | Vortex Tools v1.0
+## 🙏 Terima Kasih
+Terima kasih telah menggunakan Vortex Tools! Jika Anda menemukan proyek ini bermanfaat, silakan bintang repository ini di GitHub dan bagikan kepada teman-teman Anda.
