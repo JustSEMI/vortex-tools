@@ -94,6 +94,7 @@ vortex-tools/
 - **Error Missing DLL**: Jika mengalami error terkait DLL saat menjalankan upscaler, pastikan file `vcomp140.dll` dan `vcomp140d.dll` ada di folder `model/`.
 - **Performance Issues**: Untuk performa terbaik, jalankan aplikasi pada sistem dengan spesifikasi memadai, terutama untuk fitur AI yang memanfaatkan GPU.
 - **Logging & Debugging**: Periksa log history di bagian bawah aplikasi untuk informasi lebih lanjut tentang proses yang dijalankan dan potensi error.
+- **Versi Python**: Aplikasi ini diuji pada Python 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36). Pastikan Anda menggunakan versi yang kompatibel.
 
 ## 🤝 Kontribusi
 Kontribusi sangat diterima! Silakan fork repository ini dan buat pull request dengan fitur baru, perbaikan bug, atau peningkatan dokumentasi.
