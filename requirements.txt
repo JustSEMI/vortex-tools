@@ -1,8 +1,11 @@
-dearpygui
+imgui
+glfw
+PyOpenGL
+Pillow
 numpy
+rembg
+onnxruntime
+# Membutuhkan executable realesgan-ncnn-vulkan di folder model
 pdf2docx
 docx2pdf
-rembg
-Pillow
 pywin32
-psutil
