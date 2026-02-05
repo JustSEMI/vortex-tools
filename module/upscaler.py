@@ -1,15 +1,20 @@
-import subprocess
 import os
+import sys
+import subprocess
 
-def upscale_image(input_path, output_path, scale=4):
-    # Sesuaikan dengan struktur folder di VS Code kamu
-    # Folder 'model' ada di root proyek
-    base_dir = os.path.dirname(os.path.dirname(__file__))
-    upscaler_path = os.path.join(base_dir, "model", "realesgan-ncnn-vulkan.exe")
+def upscale_image(input_path, scale, state_ref):
+    state_ref["progress"] = 0.1
+    state_ref["status_text"] = "Menyiapkan GPU Vulkan..."
     
-    # Pastikan scale diubah menjadi string karena subprocess tidak mau menerima int
+    dir_name = os.path.dirname(input_path)
+    base_name = os.path.basename(input_path)
+    output_path = os.path.join(dir_name, f"upscaled_{base_name}")
+    
+    # Path ke exe upscaler
+    upscaler_exe = os.path.join("model", "realesgan-ncnn-vulkan.exe")
+    
     cmd = [
-        str(upscaler_path), 
+        str(upscaler_exe), 
         "-i", str(input_path), 
         "-o", str(output_path), 
         "-s", str(scale), 
@@ -17,9 +22,17 @@ def upscale_image(input_path, output_path, scale=4):
     ]
     
     try:
-        # Menjalankan proses vulkan
+        state_ref["progress"] = 0.4
+        state_ref["status_text"] = "AI Upscaling sedang berjalan..."
+        
+        # Jalankan proses
         subprocess.run(cmd, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
-        return True
+        
+        state_ref["progress"] = 1.0
+        state_ref["status_text"] = "Upscale Berhasil!"
+        state_ref["is_processing"] = False
+        return f"Sukses: {output_path}"
     except Exception as e:
-        print(f"Error Vulkan: {e}")
-        return False
+        state_ref["is_processing"] = False
+        state_ref["progress"] = 0.0
+        return f"Gagal Upscale: {str(e)}"

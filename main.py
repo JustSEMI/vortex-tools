@@ -1,170 +1,201 @@
-import dearpygui.dearpygui as dpg
-import threading
-import subprocess
-import platform
+import glfw
+import OpenGL.GL as gl
+import imgui
 import os
-
-from module import removebg, upscaler, upscaler
+import subprocess
+import threading
+from imgui.integrations.glfw import GlfwRenderer
+from tkinter import filedialog, Tk
 
 # --- IMPORT MODULES ---
-try:
-    from module import convertimg
-    modules_ready = True
-except ImportError as e:
-    modules_ready = False
-    print(f"Peringatan: Beberapa module belum lengkap: {str(e)}")
+from module import removebg, upscaler, convertimg, docxtool, watermark
 
-dpg.create_context()
+# --- STATE MANAGEMENT ---
+state = {
+    "selected_file": "Belum ada file dipilih...",
+    "selected_doc": "Belum ada dokumen dipilih...",
+    "selected_folder": "Pilih folder untuk Batch...",
+    "wm_text": "Copyright Vortex",
+    "wm_opacity": 150,
+    "upscale_scale": 4,
+    "target_img_format": 0,
+    "img_formats": ["JPG", "PNG", "WEBP", "BMP"],
+    "target_doc_type": 0,
+    "progress": 0.0,
+    "status_text": "Idle",
+    "is_processing": False,
+    "log_history": ["[VORTEX] > System Ready"]
+}
 
-state = {"selected_file": ""}
-
-# --- HELPER FUNCTIONS ---
 def log_message(msg):
-    current_log = dpg.get_value("log_box")
-    dpg.set_value("log_box", current_log + f"\n[VORTEX] > {msg}")
+    state["log_history"].append(f"[VORTEX] > {msg}")
+    if len(state["log_history"]) > 12: state["log_history"].pop(0)
 
-def file_selected_callback(sender, app_data):
-    file_path = list(app_data['selections'].values())[0]
-    state["selected_file"] = file_path
-    
-    file_name = os.path.basename(file_path)
-    if dpg.does_item_exist("img_path_text"):
-        dpg.set_value("img_path_text", f"File: {file_name}")
-    if dpg.does_item_exist("doc_path_text"):
-        dpg.set_value("doc_path_text", f"File: {file_name}")
-        
-    log_message(f"File berhasil dimuat: {file_name}")
+def select_path(target_type):
+    root = Tk()
+    root.withdraw()
+    root.attributes('-topmost', True)
+    if target_type == "img":
+        path = filedialog.askopenfilename(filetypes=[("Images", "*.jpg;*.png;*.webp;*.bmp")])
+        if path: state["selected_file"] = path
+    elif target_type == "doc":
+        path = filedialog.askopenfilename(filetypes=[("Docs", "*.pdf;*.docx")])
+        if path: state["selected_doc"] = path
+    elif target_type == "folder":
+        path = filedialog.askdirectory()
+        if path: state["selected_folder"] = path
+    root.destroy()
 
-# --- HWINFO ---
 def get_hardware_info():
     try:
-        cpu_cmd = 'powershell "(Get-CimInstance Win32_Processor).Name"'
-        cpu = subprocess.check_output(cpu_cmd, shell=True).decode().strip()
-        
-        gpu_cmd = 'powershell "(Get-CimInstance Win32_VideoController | Select-Object -First 1).Name"'
-        gpu = subprocess.check_output(gpu_cmd, shell=True).decode().strip()
-        
+        cpu = subprocess.check_output('powershell "(Get-CimInstance Win32_Processor).Name"', shell=True).decode().strip()
+        gpu = subprocess.check_output('powershell "(Get-CimInstance Win32_VideoController | Select-Object -First 1).Name"', shell=True).decode().strip()
         return f"CPU: {cpu} | GPU: {gpu} (Vulkan Mode)"
-    except:
-        return "Hardware: Detected (Vulkan Ready)"    
+    except: return "Hardware: Detected (Vulkan Ready)"
 
-# --- WRAPPER FUNCTIONS (Menghubungkan UI ke Modul) ---
+def apply_ui_theme():
+    style = imgui.get_style()
+    style.window_rounding = 0.0
+    style.frame_rounding = 4.0
+    style.colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.1, 0.1, 0.1, 1.0)
+    style.colors[imgui.COLOR_CHILD_BACKGROUND] = (0.14, 0.14, 0.14, 1.0)
+    style.colors[imgui.COLOR_HEADER] = (0.1, 0.4, 0.6, 1.0)
+    style.colors[imgui.COLOR_TAB] = (0.1, 0.1, 0.1, 1.0)
+    style.colors[imgui.COLOR_TAB_ACTIVE] = (0.0, 0.47, 0.8, 1.0)
+    style.colors[imgui.COLOR_BUTTON] = (0.2, 0.2, 0.2, 1.0)
+    style.colors[imgui.COLOR_BUTTON_HOVERED] = (0.26, 0.59, 0.98, 0.8)
 
-def run_remove_bg():
-    if not state["selected_file"]:
-        log_message("Error: Pilih gambar terlebih dahulu!")
-        return
-    
-    def task():
-        log_message("Memproses Background Remover (GPU)...")
-        result = removebg.remove_background(state["selected_file"])
-        log_message(result)
-    
-    threading.Thread(target=task, daemon=True).start()
+def main():
+    if not glfw.init(): return
+    window = glfw.create_window(800, 600, "Vortex Tools - Multi Utility Local", None, None)
+    glfw.make_context_current(window)
+    imgui.create_context()
+    impl = GlfwRenderer(window)
+    apply_ui_theme()
+    hw_info = get_hardware_info()
 
-def run_upscale():
-    if not state["selected_file"]:
-        log_message("Error: Pilih gambar terlebih dahulu!")
-        return
-    
-    scale_val = dpg.get_value("upscale_factor")
-    scale = int(scale_val.replace("x", ""))
-    
-    def task():
-        log_message(f"Memproses Upscale {scale}x (GPU)...")
-        result = upscaler.upscale_image(state["selected_file"], scale)
-        log_message(result)
-        
-    threading.Thread(target=task, daemon=True).start()
+    while not glfw.window_should_close(window):
+        glfw.poll_events()
+        impl.process_inputs()
+        imgui.new_frame()
 
-def run_format_convert():
-    if not state["selected_file"]:
-        log_message("Error: Pilih gambar terlebih dahulu!")
-        return
-    
-    target_fmt = dpg.get_value("combo_img_format")
-    
-    def task():
-        log_message(f"Mengonversi gambar ke {target_fmt}...")
-        result = convertimg.convert_image(state["selected_file"], target_fmt)
-        log_message(result)
-        
-    threading.Thread(target=task, daemon=True).start()
+        imgui.set_next_window_size(800, 600)
+        imgui.set_next_window_position(0, 0)
+        imgui.begin("PrimaryWindow", False, imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_RESIZE | imgui.WINDOW_NO_MOVE)
 
-# --- UI SETUP ---
-with dpg.file_dialog(directory_selector=False, show=False, tag="file_dialog", 
-                     width=600, height=400, callback=file_selected_callback):
-    dpg.add_file_extension(".*")
-    dpg.add_file_extension("Images (*.jpg *.png *.webp){.jpg,.png,.webp}", color=(0, 255, 0, 255))
-    dpg.add_file_extension("Docs (*.docx *.pdf){.docx,.pdf}", color=(0, 255, 255, 255))
+        imgui.text_colored("VORTEX MULTI-TOOL DASHBOARD", 0.0, 0.75, 1.0)
+        imgui.text_colored(hw_info, 0.47, 0.47, 0.47)
+        imgui.separator()
+        imgui.spacing()
 
-with dpg.window(label="Vortex Multi-Tools", tag="PrimaryWindow"):
-    dpg.add_text("VORTEX MULTI-TOOL DASHBOARD", color=(0, 191, 255))
-    dpg.add_text(f"{get_hardware_info()}", color=(120, 120, 120))
-    dpg.add_separator()
-    dpg.add_spacer(height=10)
+        if imgui.begin_tab_bar("MainTabs"):
+            # TAB IMAGE TOOLS
+            if imgui.begin_tab_item("IMAGE TOOLS")[0]:
+                imgui.spacing()
+                if imgui.button("SELECT IMAGE", 120, 30):
+                    threading.Thread(target=lambda: select_path("img")).start()
+                imgui.same_line()
+                imgui.push_item_width(-1)
+                imgui.input_text("##file", os.path.basename(state["selected_file"]), flags=imgui.INPUT_TEXT_READ_ONLY)
+                imgui.pop_item_width()
 
-    with dpg.tab_bar(tag="MainTabs"):
-        
-        # --- IMAGE TOOLS ---
-        with dpg.tab(label=" IMAGE TOOLS "):
-            dpg.add_spacer(height=10)
-            with dpg.group(horizontal=True):
-                dpg.add_button(label="SELECT IMAGE", width=130, height=30, callback=lambda: dpg.show_item("file_dialog"))
-                dpg.add_input_text(default_value="No image selected...", readonly=True, tag="img_path_text", width=-1)
-            
-            dpg.add_spacer(height=10)
-            with dpg.tab_bar():
-                with dpg.tab(label="AI Enhancement"):
-                    dpg.add_spacer(height=10)
-                    with dpg.group(horizontal=True):
-                        # Child BG Remover
-                        with dpg.child_window(width=280, height=135, border=True):
-                            dpg.add_text("Background Remover", color=(0, 255, 127))
-                            dpg.add_text("Model: u2net (GPU Support)", color=(150, 150, 150))
-                            dpg.add_spacer(height=5)
-                            dpg.add_button(label="REMOVE BG", width=-1, height=40, callback=run_remove_bg)
+                imgui.spacing()
+                if imgui.begin_tab_bar("SubTabs"):
+                    if imgui.begin_tab_item("AI Enhancement")[0]:
+                        imgui.spacing()
+                        imgui.columns(2, "tools", border=False)
                         
-                        # Child Upscaler
-                        with dpg.child_window(width=280, height=135, border=True):
-                            dpg.add_text("Image Upscaler", color=(0, 255, 127))
-                            dpg.add_radio_button(["x2", "x4"], horizontal=True, tag="upscale_factor", default_value="x4")
-                            dpg.add_spacer(height=5)
-                            dpg.add_button(label="UPSCALE (EDSR)", width=-1, height=40, callback=run_upscale)
-                
-                with dpg.tab(label="Format Converter"):
-                    dpg.add_spacer(height=10)
-                    dpg.add_text("Pilih format tujuan:")
-                    dpg.add_combo(["JPG", "PNG", "WEBP", "BMP"], tag="combo_img_format", default_value="PNG", width=200)
-                    dpg.add_spacer(height=5)
-                    dpg.add_button(label="START CONVERT", width=150, height=35, callback=run_format_convert)
+                        # Background Remover
+                        imgui.begin_child("bg_remover", 0, 135, border=True)
+                        imgui.text_colored("Background Remover", 0.0, 1.0, 0.5)
+                        imgui.text_colored("Model: u2net (GPU Support)", 0.6, 0.6, 0.6)
+                        imgui.spacing()
+                        if imgui.button("REMOVE BG", -1, 40):
+                            state["is_processing"] = True
+                            state["progress"] = 0.0
+                            threading.Thread(target=lambda: log_message(removebg.remove_background(state["selected_file"], state)), daemon=True).start()
+                        imgui.end_child()
+                        
+                        imgui.next_column()
+                        
+                        # Upscaler
+                        imgui.begin_child("upscaler", 0, 135, border=True)
+                        imgui.text_colored("Image Upscaler", 0.0, 1.0, 0.5)
+                        _, state["upscale_scale"] = imgui.slider_int("Scale", state["upscale_scale"], 2, 4)
+                        imgui.spacing()
+                        if imgui.button("UPSCALE (EDSR)", -1, 40):
+                            state["is_processing"] = True
+                            state["progress"] = 0.0
+                            threading.Thread(target=lambda: log_message(upscaler.upscale_image(state["selected_file"], state["upscale_scale"], state)), daemon=True).start()
+                        imgui.end_child()
+                        imgui.columns(1)
+                        imgui.end_tab_item()
 
-        # --- DOCUMENT TOOLS ---
-        with dpg.tab(label=" DOCUMENT TOOLS "):
-            dpg.add_spacer(height=10)
-            with dpg.group(horizontal=True):
-                dpg.add_button(label="SELECT DOC", width=130, height=30, callback=lambda: dpg.show_item("file_dialog"))
-                dpg.add_input_text(default_value="No doc selected...", readonly=True, tag="doc_path_text", width=-1)
-            dpg.add_text("Fungsi dokumen akan segera hadir.", color=(150, 150, 150))
+                    if imgui.begin_tab_item("Format Converter")[0]:
+                        imgui.spacing()
+                        imgui.text("Pilih format tujuan:")
+                        _, state["target_img_format"] = imgui.combo("Format", state["target_img_format"], state["img_formats"])
+                        if imgui.button("START CONVERT", 150, 35):
+                            fmt = state["img_formats"][state["target_img_format"]]
+                            state["is_processing"] = True
+                            state["progress"] = 0.0
+                            threading.Thread(target=lambda: log_message(convertimg.convert_image(state["selected_file"], fmt, state)), daemon=True).start()
+                        imgui.end_tab_item()
 
-    # FOOTER LOG
-    dpg.add_spacer(height=20)
-    dpg.add_separator()
-    dpg.add_text("Console Log:")
-    dpg.add_input_text(tag="log_box", multiline=True, width=-1, height=140, readonly=True)
+                    if imgui.begin_tab_item("Batch Watermark")[0]:
+                        imgui.spacing()
+                        if imgui.button("PILIH FOLDER GAMBAR", 180, 30):
+                            threading.Thread(target=lambda: select_path("folder")).start()
+                        imgui.text(f"Folder: {state['selected_folder']}")
+                        _, state["wm_text"] = imgui.input_text("Text WM", state["wm_text"], 50)
+                        if imgui.button("PROSES SEMUA FILE", -1, 40):
+                            state["is_processing"] = True
+                            state["progress"] = 0.0
+                            threading.Thread(target=lambda: log_message(watermark.apply_watermark_batch(state["selected_folder"], state["wm_text"], state)), daemon=True).start()
+                        imgui.end_tab_item()
+                imgui.end_tab_bar()
+                imgui.end_tab_item()
 
-# THEME & VIEWPORT
-with dpg.theme() as global_theme:
-    with dpg.theme_component(dpg.mvAll):
-        dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (25, 25, 25))
-        dpg.add_theme_color(dpg.mvThemeCol_ChildBg, (35, 35, 35))
-        dpg.add_theme_color(dpg.mvThemeCol_Button, (50, 50, 50))
-        dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 5)
+            # TAB DOCUMENT TOOLS
+            if imgui.begin_tab_item("DOCUMENT TOOLS")[0]:
+                imgui.spacing()
+                if imgui.button("SELECT DOC", 120, 30):
+                    threading.Thread(target=lambda: select_path("doc")).start()
+                imgui.text(f"File: {os.path.basename(state['selected_doc'])}")
+                if imgui.button("CONVERT TO PDF/WORD", -1, 40):
+                    log_message("Memulai konversi dokumen...")
+                    state["is_processing"] = True
+                    state["progress"] = 0.0
+                    threading.Thread(target=lambda: log_message(docxtool.convert_document(state["selected_doc"], state)), daemon=True).start()
+                imgui.end_tab_item()
+            imgui.end_tab_bar()
 
-dpg.bind_theme(global_theme)
-dpg.create_viewport(title='Vortex Tools - Multi Utility Local', width=750, height=580)
-dpg.setup_dearpygui()
-dpg.show_viewport()
-dpg.set_primary_window("PrimaryWindow", True)
-dpg.start_dearpygui()
-dpg.destroy_context()
+        if state["is_processing"]:
+            imgui.spacing()
+            imgui.separator()
+            imgui.spacing()
+    
+            imgui.text_colored(state["status_text"], 0.0, 0.8, 1.0) 
+    
+            imgui.push_style_color(imgui.COLOR_PLOT_HISTOGRAM, 0.0, 0.9, 0.5, 1.0)
+            imgui.progress_bar(state["progress"], (-1, 25), f"{int(state['progress']*100)}%")
+            imgui.pop_style_color()
+    
+            imgui.spacing()
+
+        # CONSOLE LOG
+        imgui.spacing(); imgui.separator(); imgui.text("Console Log:")
+        imgui.begin_child("logs", 0, 0, border=True)
+        for line in state["log_history"]: imgui.text(line)
+        imgui.end_child()
+
+        imgui.end()
+        gl.glClearColor(0.1, 0.1, 0.1, 1.0)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+        imgui.render()
+        impl.render(imgui.get_draw_data())
+        glfw.swap_buffers(window)
+
+    impl.shutdown(); glfw.terminate()
+
+if __name__ == "__main__": main()

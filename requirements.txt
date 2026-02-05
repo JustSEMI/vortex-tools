@@ -1,9 +1,8 @@
 dearpygui
-dearpygui
-psutil
-GPUtil
-numpy<2.0
-Pillow
-opencv-python
-rembg
+numpy
+pdf2docx
 docx2pdf
+rembg
+Pillow
+pywin32
+psutil
