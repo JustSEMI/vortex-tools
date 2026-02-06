@@ -45,6 +45,13 @@
   - Konversi file Word (.docx) ke format PDF
   - Menggunakan pywin32 untuk konversi native Windows
 
+### 3. AUDIO TOOLS
+- **Audio Downloader**
+  - Download audio dari video YouTube menggunakan yt-dlp
+  - Output dalam format MP3
+- **Format Converter**
+  - Konversi file audio ke format populer seperti MP3, WAV, AAC menggunakan pydub
+
 ---
 
 ## 📥 Instalasi
@@ -56,7 +63,7 @@ cd vortex-tools
 ```
 ### 2. Install Dependencies For ImGui
 ```bash
-pip install -r imgui glfw PyOpenGL Pillow numpy rembg onnxruntime pdf2docx docx2pdf pywin32
+pip install -r imgui glfw PyOpenGL Pillow numpy rembg onnxruntime pdf2docx docx2pdf pywin32 psutil yt-dlp pydub
 ```
 ### 3. Install Dependencies For DearPyGui
 ```bash
@@ -76,22 +83,18 @@ py main_beta.pyw
 ## 📁 Struktur Proyek
 ```bash
 vortex-tools/
-├── main.pyw               # File utama aplikasi (GUI & orchestration)
-├── main_beta.pyw          # Versi beta dengan DearPyGui
-├── README.md              # Dokumentasi proyek
-├── requirements.txt       # Dependencies Python
+├── main.pyw
+├── main_beta.pyw
 ├── module/
-│   ├── __init__.py        # Module initialization
-│   ├── removebg.py        # Background Remover (rembg + u2net)
-│   ├── upscaler.py        # Image Upscaler (EDSR via NCNN)
-│   ├── convertimg.py      # Format Converter (PIL)
-│   ├── docxtool.py        # Document Converter (PDF ↔ DOCX)
-│   ├── watermark.py       # Batch Watermark Tool
-│   └── __pycache__/       # Python cache
-└── model/                 # AI Model executables & dependencies
-    ├── realesrgan-ncnn-vulkan.exe
-    ├── vcomp140.dll
-    └── vcomp140d.dll
+│   ├── audio.py
+│   ├── document.py
+│   ├── image.py
+│   ├── utility.py
+│   └── downloader.py
+├── model/
+│   bin/
+├── README.md
+└── LICENSE
 ```
 
 ---
