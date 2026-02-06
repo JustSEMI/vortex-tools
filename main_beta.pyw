@@ -5,7 +5,7 @@ import subprocess
 from tkinter import filedialog, Tk
 
 # --- IMPORT MODULES ---
-from module import removebg, upscaler, convertimg, docxtool, watermark
+from module import image, document, sound
 
 # --- HARDWARE INFO ---
 def get_hardware_info():
@@ -93,14 +93,14 @@ with dpg.window(label="Main", tag="PrimaryWindow"):
                                 dpg.add_text("Model: u2net (GPU Support)", color=[150, 150, 150])
                                 dpg.add_spacer(height=10)
                                 dpg.add_button(label="REMOVE BG", width=-1, height=40,
-                                    callback=lambda: threading.Thread(target=lambda: log_message(removebg.remove_background(state["img"], state_ref)), daemon=True).start())
+                                    callback=lambda: threading.Thread(target=lambda: log_message(image.remove_background(state["img"], state_ref)), daemon=True).start())
 
                             with dpg.child_window(height=150, border=True):
                                 dpg.add_text("Image Upscaler", color=[0, 255, 128])
                                 dpg.add_slider_int(label="Scale", default_value=4, min_value=2, max_value=4, width=-100)
                                 dpg.add_spacer(height=10)
                                 dpg.add_button(label="UPSCALE (EDSR)", width=-1, height=40,
-                                    callback=lambda: threading.Thread(target=lambda: log_message(upscaler.upscale_image(state["img"], 4, state_ref)), daemon=True).start())
+                                    callback=lambda: threading.Thread(target=lambda: log_message(image.upscale_image(state["img"], 4, state_ref)), daemon=True).start())
 
                 with dpg.tab(label="Format Converter"):
                     dpg.add_spacer(height=10)
@@ -108,7 +108,7 @@ with dpg.window(label="Main", tag="PrimaryWindow"):
                     combo_fmt = dpg.add_combo(["JPG", "PNG", "WEBP", "BMP"], default_value="PNG", width=200)
                     dpg.add_spacer(height=5)
                     dpg.add_button(label="START CONVERT", width=200, height=35,
-                        callback=lambda: threading.Thread(target=lambda: log_message(convertimg.convert_image(state["img"], dpg.get_value(combo_fmt), state_ref)), daemon=True).start())
+                        callback=lambda: threading.Thread(target=lambda: log_message(image.convert_image(state["img"], dpg.get_value(combo_fmt), state_ref)), daemon=True).start())
 
                 with dpg.tab(label="Batch Watermark"):
                     dpg.add_spacer(height=10)
@@ -117,7 +117,7 @@ with dpg.window(label="Main", tag="PrimaryWindow"):
                     wm_in = dpg.add_input_text(label="Text WM", default_value="Copyright Vortex", width=300)
                     dpg.add_spacer(height=5)
                     dpg.add_button(label="PROSES SEMUA FILE", width=-1, height=40,
-                        callback=lambda: threading.Thread(target=lambda: log_message(watermark.apply_watermark_batch(state["folder"], dpg.get_value(wm_in), state_ref)), daemon=True).start())
+                        callback=lambda: threading.Thread(target=lambda: log_message(image.apply_watermark_batch(state["folder"], dpg.get_value(wm_in), state_ref)), daemon=True).start())
 
         # --- DOCUMENT TOOLS ---
         with dpg.tab(label=" DOCUMENT TOOLS "):
@@ -126,7 +126,7 @@ with dpg.window(label="Main", tag="PrimaryWindow"):
             dpg.add_text("File: ...", tag="path_doc_text")
             dpg.add_spacer(height=10)
             dpg.add_button(label="CONVERT TO PDF/WORD", width=-1, height=40,
-                 callback=lambda: threading.Thread(target=lambda: log_message(docxtool.convert_doc(state["doc"], "DOCX" if str(state["doc"]).lower().endswith(".pdf") else "PDF", state_ref)), daemon=True).start())
+                 callback=lambda: threading.Thread(target=lambda: log_message(document.convert_doc(state["doc"], "DOCX" if str(state["doc"]).lower().endswith(".pdf") else "PDF", state_ref)), daemon=True).start())
 
     dpg.add_spacer(height=10)
     dpg.add_separator()
