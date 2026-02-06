@@ -62,9 +62,13 @@ pip install -r imgui glfw PyOpenGL Pillow numpy rembg onnxruntime pdf2docx docx2
 ```bash
 pip install dearpygui Pillow numpy rembg onnxruntime pdf2docx docx2pdf pywin32
 ```
-### 4. Jalankan Aplikasi
+### 4. ImGUI Version
 ```bash
-py main.pyw or main_beta.pyw
+py main.pyw
+```
+### 5. DearPyGui Version
+```bash
+py main_beta.pyw
 ```
 
 ---
