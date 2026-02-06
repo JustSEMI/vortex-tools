@@ -54,13 +54,17 @@
 git clone https://github.com/JustSEMI/vortex-tools.git
 cd vortex-tools
 ```
-### 2. Install Dependencies
+### 2. Install Dependencies For ImGui
 ```bash
-pip install -r requirements.txt
+pip install -r imgui glfw PyOpenGL Pillow numpy rembg onnxruntime pdf2docx docx2pdf pywin32
 ```
-### 3. Jalankan Aplikasi
+### 3. Install Dependencies For DearPyGui
 ```bash
-python main.py
+pip install dearpygui Pillow numpy rembg onnxruntime pdf2docx docx2pdf pywin32
+```
+### 4. Jalankan Aplikasi
+```bash
+py main.pyw or main_beta.pyw
 ```
 
 ---
@@ -68,7 +72,8 @@ python main.py
 ## 📁 Struktur Proyek
 ```bash
 vortex-tools/
-├── main.py                 # File utama aplikasi (GUI & orchestration)
+├── main.pyw               # File utama aplikasi (GUI & orchestration)
+├── main_beta.pyw          # Versi beta dengan DearPyGui
 ├── README.md              # Dokumentasi proyek
 ├── requirements.txt       # Dependencies Python
 ├── module/
