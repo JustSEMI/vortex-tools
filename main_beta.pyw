@@ -5,7 +5,7 @@ import subprocess
 from tkinter import filedialog, Tk
 
 # --- IMPORT MODULES ---
-from module import image, document, sound
+from module import image, document, audio
 
 # --- HARDWARE INFO ---
 def get_hardware_info():
